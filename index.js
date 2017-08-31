@@ -16,7 +16,7 @@ var helper=require (__dirname+"/helper");
 key:fs.readFileSync('./file.pem'), cert: fs.readFileSync('./file.crt')	
 };*/
 var server = require('http').Server(app);
-server.listen(8080);
+server.listen(8000);
 server.timeout = 2400000;
 var io = require('socket.io')(server);
 const fileUpload = require('express-fileupload');
@@ -44,6 +44,15 @@ app.get('/', function(req, res) {
     res.end();
 });
 
+app.get("/upload",(req,res)=>{
+
+    console.log(req.files);
+    if(req.files.inputValues){
+
+        consoel.log(req.files.inputValues);
+    }
+});
+
 app.use('/bodyParts', express.static(__dirname+'/BodyParts'))
 io.on('connection',function(socket){
 var port;
@@ -54,23 +63,7 @@ var scriptProcess;
 
 socket.on("disconnect",()=>{
         console.log("got Disconnected "+port );
-    try{
-        var cp=require("child_process");
-
-        }catch(e){
-
-	console.log(e);
-    }
-   try{
-        scriptProcess.kill('SIGINT');
-
-
-
-
-   }catch(e)
-    {
-        console.log("failed to kill process");
-    }
+    
 });
 
 socket.on("bodyPart",(req)=>{
@@ -119,6 +112,7 @@ socket.on("bodyPart",(req)=>{
 });
 
 socket.on("upload",(req)=>{
+    console.log("upload req");
     if(!req.inputValues && !req.outputValues)
         {
             socket.emit('errorInfo',{msg:"Not all the parameters were provided"});
@@ -126,7 +120,7 @@ socket.on("upload",(req)=>{
         }
 //make timestamp folder
 	var folder_id=new Date().getTime();
-    var folder=path.join( __dirname, "uploads", folder_id);
+    var folder=path.join( __dirname, "uploads", ""+folder_id);
     //fs.mkdir(folder);  //this is asynchronous,sometimes it executes early, but sometime it takes time
     fs.mkdirSync(folder);  //this should fix
 console.log("saving files");    
@@ -147,13 +141,13 @@ console.log("saving files");
         }
         //run.py
                             console.log("executing ramp.py");
-		                    var pyScript="python2 "+"c:\s3\ramp.py";  
+		                    var pyScript="python"+" c:\\s3\\ramp.py";  
 	                        console.log("command" + pyScript);
                             child_process=require("child_process");
                             var inputfile=path.join( folder,"input.json");
                             var outputfile=path.join( folder,"output.json");
-                        
-                                child_process.exec(`${pyScript}/ramp.py ${inputfile} ${outputfile}`,function(err,stdout,stderr){
+                        console.log(`${pyScript} ${inputfile} ${outputfile} ${folder}`);
+                                child_process.exec(`${pyScript} ${inputfile} ${outputfile} ${folder}`,function(err,stdout,stderr){
 
                                     if(err)
                                         {
