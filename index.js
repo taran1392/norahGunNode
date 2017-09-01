@@ -3,7 +3,7 @@
 
 
 
- var domainName="https://absentiachargen.com";
+ var domainName="http://35.197.31.80:8000";
 var fs = require('fs');
 var express = require('express');
 var portastic = require('portastic');
@@ -49,7 +49,7 @@ app.get("/upload",(req,res)=>{
     console.log(req.files);
     if(req.files.inputValues){
 
-        consoel.log(req.files.inputValues);
+        console.log(req.files.inputValues);
     }
 });
 
@@ -163,8 +163,37 @@ console.log("saving files");
                                             
                                             for (var i=0;i<4;i++){
                                                 var jsonData=fs.readFileSync(path.join(folder,"data"+i+".json"),'utf-8');
+                                                var jsonFile=path.join(folder,"data"+i+".json");
                                                 var obj=JSON.parse(jsonData);
-                                                data.push(obj);
+                                                var id=folder_id+"_"+i;
+                                                var gunModel={jsonValues:obj};
+                                                gunModel["id"]=id;
+                                                gunModel["img"]= domainName+ "/loading.gif";
+                                                data.push(gunModel);
+
+                                                //generate imaegs
+
+                                                (function(id,gunModel,jsonFile){
+                                                            console.log(gunModel);
+                                                        var cp=require("child_process");
+
+                                                       cp.exec(`python c:\run2.py c:\s1 gun1.json c:\s2`,function(err,stdout,stderr)
+                                                       {
+
+                                                                if(err){
+                                                                           console.log("Failed to generate gun image");
+                                                                           gunModel["img"]=domainName+ "/error.png"
+                                                                           socket.emit("imageFile",{file:gunModel})
+                                                                }else{
+                                                                    gunModel["img"]=domainName+ "/gun.png"
+                                                                    
+                                                                    console.log("Gun Image Generated");
+                                                                                socket.emit("imageFile",{file:gunModel});
+                                                                }
+
+
+                                                       }); 
+                                                })(id,gunModel,jsonFile);
 
 
                                             }                            
